@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Hand Hygiene Audit App</title>
+<style>
+:root{--bg:#f4f7fb;--card:#fff;--text:#172033;--muted:#667085;--line:#dfe5ee;--accent:#1769e0;--good:#138a52;--bad:#d92d20}
+*{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;background:var(--bg);color:var(--text)}
+header{background:#1769e0;color:#fff;padding:18px 22px;display:flex;justify-content:space-between;align-items:center;gap:12px}
+header h1{font-size:21px;margin:0} header small{opacity:.9}
+nav{display:flex;gap:8px;padding:12px;background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5}
+button{border:0;border-radius:10px;padding:12px 16px;min-height:44px;font-weight:600;cursor:pointer;background:#1769e0;color:#fff}
+button.secondary{background:#eef4ff;color:#1769e0}button.danger{background:#fff0ef;color:#b42318}
+main{max-width:1100px;margin:20px auto;padding:0 14px}.tab{display:none}.tab.active{display:block}
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;box-shadow:0 2px 8px #1018280d}
+.kpi{font-size:28px;font-weight:700;margin-top:8px}.label{color:var(--muted);font-size:13px}
+form{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}.full{grid-column:1/-1}
+label{font-size:13px;font-weight:600;display:block;margin-bottom:6px}
+input,select,textarea{width:100%;padding:12px;border:1px solid #cfd6e1;border-radius:8px;font-size:14px;background:#fff}
+fieldset{border:1px solid var(--line);border-radius:10px;padding:12px}.choices{display:flex;flex-wrap:wrap;gap:10px}.choices label{font-weight:500;background:#f7f9fc;padding:8px 10px;border-radius:8px;margin:0}
+table{width:100%;border-collapse:collapse;background:#fff;border-radius:10px;overflow:hidden}th,td{padding:10px;border-bottom:1px solid var(--line);text-align:left;font-size:13px}th{background:#f7f9fc}
+.badge{padding:4px 8px;border-radius:20px;font-size:12px;font-weight:700}.yes{background:#e8f7ef;color:var(--good)}.no{background:#fff0ef;color:var(--bad)}
+.toolbar{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}.note{color:var(--muted);font-size:13px}
+@media(max-width:800px){.grid{grid-template-columns:repeat(2,1fr)}form{grid-template-columns:1fr}.full{grid-column:auto}}
+@media(max-width:500px){.grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header>
+<div><h1>🧼 Hand Hygiene Audit</h1><small>Infection Prevention & Control</small><br><small><b>Prepared by: Akshay Nagre, ICN</b></small></div>
+<div id="today"></div>
+</header>
+<nav>
+<button onclick="showTab('dashboard')">📊 Home</button>
+<button onclick="showTab('audit')">➕ Audit</button>
+<button onclick="showTab('records')">📋 History</button>
+</nav>
+
+<main>
+<section id="dashboard" class="tab active">
+<h2>Dashboard</h2>
+<div class="grid">
+<div class="card"><div class="label">Total Opportunities</div><div class="kpi" id="kpiOpp">0</div></div>
+<div class="card"><div class="label">Performed</div><div class="kpi" id="kpiPerf">0</div></div>
+<div class="card"><div class="label">Missed</div><div class="kpi" id="kpiMiss">0</div></div>
+<div class="card"><div class="label">Compliance</div><div class="kpi" id="kpiComp">0%</div></div>
+</div>
+<div class="card" style="margin-top:16px">
+<h3>Ward-wise summary</h3>
+<table><thead><tr><th>Ward</th><th>Opportunities</th><th>Performed</th><th>Compliance</th></tr></thead><tbody id="wardBody"></tbody></table>
+</div>
+</section>
+
+<section id="audit" class="tab">
+<h2>➕ Quick Audit</h2>
+<div class="card" style="margin-bottom:14px;background:#eef4ff;border-color:#cfe0ff"><b>Quick steps:</b> Select ward → staff → WHO moment → Performed/Missed → method → Save.</div>
+<div class="card">
+<form id="auditForm">
+<div><label>Auditor Name *</label><input id="auditor" required></div>
+<div><label>Date & Time *</label><input id="datetime" type="datetime-local" required></div>
+<div><label>Ward / Department *</label>
+<select id="ward" required><option value="">Select ward</option><option>NICU</option><option>PICU</option><option>ICU</option><option>OT</option><option>General Ward</option><option>Emergency</option><option>OPD</option><option>Other</option></select></div>
+<div><label>Staff Category *</label>
+<select id="staff" required><option value="">Select category</option><option>Nurse</option><option>Doctor</option><option>Housekeeping</option><option>Technician</option><option>Other</option></select></div>
+
+<fieldset class="full"><legend><b>WHO 5 Moments</b></legend>
+<div class="choices">
+<label><input type="radio" name="moment" value="Before touching patient" required> Before touching patient</label>
+<label><input type="radio" name="moment" value="Before clean/aseptic procedure"> Before clean/aseptic procedure</label>
+<label><input type="radio" name="moment" value="After body-fluid exposure risk"> After body-fluid exposure risk</label>
+<label><input type="radio" name="moment" value="After touching patient"> After touching patient</label>
+<label><input type="radio" name="moment" value="After touching patient surroundings"> After touching surroundings</label>
+</div></fieldset>
+
+<fieldset><legend><b>Action</b></legend>
+<div class="choices">
+<label><input type="radio" name="action" value="Performed" required> Performed</label>
+<label><input type="radio" name="action" value="Missed"> Missed</label>
+</div></fieldset>
+
+<fieldset><legend><b>Method</b></legend>
+<div class="choices">
+<label><input type="radio" name="method" value="ABHR" required> ABHR</label>
+<label><input type="radio" name="method" value="Soap & Water"> Soap & Water</label>
+<label><input type="radio" name="method" value="Not applicable"> Not applicable</label>
+</div></fieldset>
+
+<div><label>Technique</label><select id="technique"><option>Correct</option><option>Incorrect</option><option>Not assessed</option></select></div>
+<div><label>Staff ID (optional)</label><input id="staffid"></div>
+<div class="full"><label>Remarks</label><textarea id="remarks" rows="3" placeholder="Enter observation, gap, or corrective action..."></textarea></div>
+<div class="full"><button type="submit">Save Audit</button> <button type="button" class="secondary" onclick="document.getElementById('auditForm').reset();setDate()">Clear</button></div>
+</form>
+</div>
+</section>
+
+<section id="records" class="tab">
+<h2>Audit Records</h2>
+<div class="toolbar">
+<button onclick="exportCSV()">Export CSV</button>
+<button class="danger" onclick="clearAll()">Delete All Records</button>
+</div>
+<p class="note">Records are stored locally in this browser. This prototype does not send patient or staff data to a server.</p>
+<div class="card">
+<table><thead><tr><th>Date</th><th>Ward</th><th>Staff</th><th>Moment</th><th>Action</th><th>Method</th><th>Technique</th></tr></thead><tbody id="recordBody"></tbody></table>
+</div>
+</section>
+</main>
+
+<script>
+const KEY='hhaudit_v1';
+const $=id=>document.getElementById(id);
+function getData(){return JSON.parse(localStorage.getItem(KEY)||'[]')}
+function saveData(d){localStorage.setItem(KEY,JSON.stringify(d))}
+function showTab(id){document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));$(id).classList.add('active');if(id==='dashboard')render();if(id==='records')renderRecords()}
+function setDate(){let d=new Date();d.setMinutes(d.getMinutes()-d.getTimezoneOffset());$('datetime').value=d.toISOString().slice(0,16)}
+function render(){
+ const d=getData(), opp=d.length, perf=d.filter(x=>x.action==='Performed').length;
+ $('kpiOpp').textContent=opp;$('kpiPerf').textContent=perf;$('kpiMiss').textContent=opp-perf;
+ $('kpiComp').textContent=(opp?Math.round(perf/opp*100):0)+'%';
+ const wards={};d.forEach(x=>{wards[x.ward]??={o:0,p:0};wards[x.ward].o++;if(x.action==='Performed')wards[x.ward].p++});
+ $('wardBody').innerHTML=Object.entries(wards).map(([w,v])=>`<tr><td>${esc(w)}</td><td>${v.o}</td><td>${v.p}</td><td>${Math.round(v.p/v.o*100)}%</td></tr>`).join('')||'<tr><td colspan="4">No audits yet.</td></tr>';
+}
+function renderRecords(){
+ const d=getData();
+ $('recordBody').innerHTML=d.slice().reverse().map(x=>`<tr><td>${esc(x.datetime.replace('T',' '))}</td><td>${esc(x.ward)}</td><td>${esc(x.staff)}</td><td>${esc(x.moment)}</td><td><span class="badge ${x.action==='Performed'?'yes':'no'}">${esc(x.action)}</span></td><td>${esc(x.method)}</td><td>${esc(x.technique)}</td></tr>`).join('')||'<tr><td colspan="7">No records yet.</td></tr>';
+}
+function esc(s){return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
+$('auditForm').addEventListener('submit',e=>{
+ e.preventDefault();
+ const q=n=>document.querySelector(`input[name="${n}"]:checked`)?.value;
+ const d=getData();d.push({auditor:$('auditor').value,datetime:$('datetime').value,ward:$('ward').value,staff:$('staff').value,moment:q('moment'),action:q('action'),method:q('method'),technique:$('technique').value,staffid:$('staffid').value,remarks:$('remarks').value});
+ saveData(d);e.target.reset();setDate();render();alert('✅ Audit saved successfully!');showTab('dashboard');
+});
+function exportCSV(){
+ const d=getData();if(!d.length){alert('No records to export.');return}
+ const cols=['auditor','datetime','ward','staff','moment','action','method','technique','staffid','remarks'];
+ const csv=[cols.join(','),...d.map(x=>cols.map(c=>`"${String(x[c]??'').replace(/"/g,'""')}"`).join(','))].join('\n');
+ const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));a.download='hand_hygiene_audit.csv';a.click();URL.revokeObjectURL(a.href);
+}
+function clearAll(){if(confirm('Delete all locally stored audit records?')){saveData([]);render();renderRecords()}}
+$('today').textContent=new Date().toLocaleDateString();
+setDate();render();renderRecords();
+</script>
+</body>
+</html>
